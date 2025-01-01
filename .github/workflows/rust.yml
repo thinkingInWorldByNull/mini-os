@@ -17,6 +17,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build
-      run: sh build_utils.sh --clean --build
+      run: sh build_utils.sh --clean
     - name: Run tests
       run: cargo test --verbose

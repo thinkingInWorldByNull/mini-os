@@ -13,7 +13,7 @@ rustup component add llvm-tools-preview
 **编译**
 
 ```shell
-sh build_utils.sh --clean --build
+sh build_utils.sh --clean
 ```
 
 **运行**
