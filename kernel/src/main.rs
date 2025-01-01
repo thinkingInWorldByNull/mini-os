@@ -1,11 +1,16 @@
 #![no_std]
-#![no_main]  // disable rust level entry point
+#![no_main]
+
+extern crate alloc;
 
 mod logger;
 
-use crate::logger::Logger;
-use core::fmt::Write;
 use core::panic::PanicInfo;
+use linked_list_allocator::LockedHeap;
+
+#[global_allocator]
+static ALLOCATOR: LockedHeap = LockedHeap::empty();
+
 
 // 出现panic的时候应该怎么处理，标准库std已经写好了。但是在no_std情况下就需要自己写一个handler处理
 #[panic_handler]
@@ -18,22 +23,19 @@ bootloader_api::entry_point!(kernel_main);
 
 
 fn kernel_main(_boot_info: &'static mut bootloader_api::BootInfo) -> ! {
-    show(_boot_info);
+    init_heap();
+    display_text();
     loop {}
 }
 
-fn show(boot_info: &'static mut bootloader_api::BootInfo) {
-    init_logger(boot_info).expect("init log error")
-        .write_str("Hello, world!\n")
-        .expect("write error, please check");
+fn init_heap() {
+    unsafe {
+        const HEAP_SIZE: usize = 0x4000;
+        let mut heap_space: [u8; HEAP_SIZE] = [0; HEAP_SIZE];
+        ALLOCATOR.lock().init(heap_space.as_mut_ptr(), HEAP_SIZE);
+    }
 }
 
-fn init_logger(boot_info: &'static mut bootloader_api::BootInfo) -> Option<Logger>{
-    if let Some(framebuffer) = boot_info.framebuffer.as_mut() {
-        let buf_info = framebuffer.info().clone();
-
-        Some(Logger::new(framebuffer.buffer_mut(), buf_info))
-    } else {
-        None
-    }
+fn display_text() {
+    println!("Hello, {}\n", "mini-os");
 }

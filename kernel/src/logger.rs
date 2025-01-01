@@ -1,7 +1,16 @@
 use core::{fmt, ptr};
+use core::fmt::Write;
 use bootloader_api::info::{FrameBufferInfo, PixelFormat};
 use font8x8::UnicodeFonts;
+use lazy_static::lazy_static;
+
 const LINE_SPACING: usize = 0;
+
+use spin::Mutex;
+
+lazy_static! {
+    static ref LOGGER_WRITER: Mutex<Logger> = Mutex::new(create_logger());
+}
 
 pub struct Logger {
     framebuffer: &'static mut [u8],
@@ -27,10 +36,6 @@ impl Logger {
     fn newline(&mut self) {
         self.y_pos += 8 + LINE_SPACING;
         self.carriage_return()
-    }
-
-    fn add_vspace(&mut self, space: usize) {
-        self.y_pos += space;
     }
 
     fn carriage_return(&mut self) {
@@ -107,5 +112,44 @@ impl fmt::Write for Logger {
             self.write_char(c);
         }
         Ok(())
+    }
+}
+
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => ($crate::logger::_print(format_args!($($arg)*)));
+}
+
+#[macro_export]
+macro_rules! println {
+    () => ($crate::print!("\n"));
+    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+}
+
+
+#[doc(hidden)]
+pub fn _print(args: fmt::Arguments) {
+    LOGGER_WRITER.lock().write_fmt(args).unwrap();
+}
+
+fn create_logger() -> Logger{
+    let frame_buf: &'static mut [u8] = unsafe {
+        let raw_ptr: *mut u8 = 0x18000000000 as *mut u8;
+        // 创建一个可变切片
+        core::slice::from_raw_parts_mut(raw_ptr, 4096*1000)
+    };
+
+
+    Logger::new(frame_buf, create_default_framebuffer_info())
+}
+
+fn create_default_framebuffer_info() -> FrameBufferInfo {
+    FrameBufferInfo {
+        byte_len: 4096000,
+        width: 1280,
+        height: 800,
+        pixel_format: PixelFormat::Bgr,
+        bytes_per_pixel: 4,
+        stride: 1280,
     }
 }
