@@ -16,9 +16,9 @@ for arg in "$@"; do
       shift
       ;;
     --help | -h)
-      echo "Usage: $0 [-clean] [-run]"
-            echo "--clean or: clean"
-            echo "--run: run the image default only build, Note! must install qemu"
+      echo "Usage: $0 [-b] [-c] [-r]"
+            echo "--clean or -c : will clean then build default false "
+            echo "--run or -r: run the image default only build, Note! must install qemu"
             exit 0
             ;;
     -*|--*)
@@ -45,6 +45,7 @@ cargo build --target x86_64-unknown-none
 
 ######################### build elf / bios image start
 cd ../
+
 cargo build
 
 if [ "$RUN" = true ]; then

@@ -1,13 +1,25 @@
 
-**编译**
+**先决条件**
 
-整个编译过程包含二步：编译内核以及将内核打包成启动镜像
+- 安装`qemu`
+- 安装必要的rust编译工具
 
 ```shell
-cd kernel
-cargo build --target x86_64-unknown-none
+rustup override set nightly
+rustup component add rust-src
+rustup component add llvm-tools-preview
+```
 
-cd ..
-CARGO_BUILD_PRINT_SCRIPTS=1 cargo build
+**编译**
+
+```shell
+sh build_utils.sh --clean --build
+```
+
+**运行**
+
+>❗️必须要先安装`qemu`模拟器
+
+```shell
 cargo run
 ```
